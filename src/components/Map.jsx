@@ -7,28 +7,27 @@ import {
     useMap,
     useMapEvents,
 } from "react-leaflet";
+
 import styles from "./Map.module.css";
 import { useEffect, useState } from "react";
 import { useCities } from "../contexts/CitiesContext";
 import { useGeolocation } from "../hooks/useGeolocation";
+import { useUrlPosition } from "../hooks/useUrlPosition";
 import Button from "./Button";
 
 function Map() {
     const { cities } = useCities();
-    const [mapPosition, setmapPosition] = useState([40, 0]);
-    const [searchParams] = useSearchParams();
+    const [mapPosition, setMapPosition] = useState([40, 0]);
     const {
         isLoading: isLoadingPosition,
         position: geolocationPosition,
         getPosition,
     } = useGeolocation();
-
-    const mapLat = searchParams.get("lat");
-    const mapLng = searchParams.get("lng");
+    const [mapLat, mapLng] = useUrlPosition();
 
     useEffect(
         function () {
-            if (mapLat && mapLng) setmapPosition([mapLat, mapLng]);
+            if (mapLat && mapLng) setMapPosition([mapLat, mapLng]);
         },
         [mapLat, mapLng]
     );
@@ -36,7 +35,7 @@ function Map() {
     useEffect(
         function () {
             if (geolocationPosition)
-                setmapPosition([
+                setMapPosition([
                     geolocationPosition.lat,
                     geolocationPosition.lng,
                 ]);
@@ -51,6 +50,7 @@ function Map() {
                     {isLoadingPosition ? "Loading..." : "Use your position"}
                 </Button>
             )}
+
             <MapContainer
                 center={mapPosition}
                 zoom={6}
@@ -67,13 +67,14 @@ function Map() {
                         key={city.id}
                     >
                         <Popup>
-                            <span>{city.emoji}</span>
+                            <span>{city.emoji}</span>{" "}
+                            <span>{city.cityName}</span>
                         </Popup>
                     </Marker>
                 ))}
 
-                <ChangeCenter position={mapPosition}></ChangeCenter>
-                <DetectClick></DetectClick>
+                <ChangeCenter position={mapPosition} />
+                <DetectClick />
             </MapContainer>
         </div>
     );
@@ -89,7 +90,7 @@ function DetectClick() {
     const navigate = useNavigate();
 
     useMapEvents({
-        click: (e) => navigate(`form?lat=${e.latlng.lat}&${e.latlng.lng}`),
+        click: (e) => navigate(`form?lat=${e.latlng.lat}&lng=${e.latlng.lng}`),
     });
 }
 
